@@ -7,6 +7,7 @@ class KanbanBoard {
 	private $clients = [];
 	private $users = [];
 	private $activeProjects = [];
+	private $stickers;
 
 	public function __construct($datasource) {
 		$this->datasource = $datasource;
@@ -63,6 +64,30 @@ class KanbanBoard {
 				$this->activeProjects[] = $activeProject;
 			}
 		}
+
+		if (!empty($data['stickers'])) {
+			$this->stickers = $data['stickers'];
+		}
+		return $this;
+	}
+
+	public function setUsers(Array $userData) {
+		array_map(function($user) {
+			if ($user['active'] && !$user['inactive']) {
+				$this->addUser(KanbanBoardUser::fromArray($user));
+			}
+		}, $userData);
+		return $this;
+	}
+
+	public function addUser(KanbanBoardUser $user) {
+		foreach ($this->users AS $u) {
+			if ($u->getID()==$user->getID()) {
+				return $this;
+			}
+		}
+		$this->users[] = $user;
+		return $this;
 	}
 
 	public function setClients(Array $clients) {
@@ -73,18 +98,24 @@ class KanbanBoard {
 	}
 
 	public function addClient(KanbanBoardClient $client) {
-		if (!in_array($client, $this->clients, true)) {
-			$this->clients[] = $client;
+		foreach ($this->clients AS $c) {
+			if ($c->getID()==$client->getID()) {
+				return $this;
+			}
 		}
+		$this->clients[] = $client;
 		return $this;
 	}
 
 	public function addProject(KanbanBoardProject $project) {
-		if (!in_array($project, $this->projects, true)) {
-			$this->projects[] = $project;
-			if ($project->getClientID() && $this->hasClient($project->getClientID())) {
-				$project->setClient($this->getClient($project->getClientID()));
+		foreach ($this->projects AS $p) {
+			if ($p->getID()==$project->getID()) {
+				return $this;
 			}
+		}
+		$this->projects[] = $project;
+		if ($project->getClientID() && $this->hasClient($project->getClientID())) {
+			$project->setClient($this->getClient($project->getClientID()));
 		}
 		return $this;
 	}
@@ -150,27 +181,28 @@ class KanbanBoard {
 
 	public function toArray() {
 		return [
-			"clients"=>array_reduce($this->clients, function($container, $client) {
-				$container[] = $client->toArray();
-				return $container;
-			}),
-			"projects"=>array_reduce($this->projects, function($container, $project) {
-				$container[] = $project->toArray();
-				return $container;
-			}),
-			"users"=>array_reduce($this->users, function($container, $user) {
-				$container[] = $user->toArray();
-				return $container;
-			}),
-			"activeProjects"=>array_reduce($this->activeProjects, function($container, $project) {
-				$container[] = $project->toArray();
-				return $container;
-			})
+		"clients"=>array_reduce($this->clients, function($container, $client) {
+			$container[] = $client->toArray();
+			return $container;
+		}),
+		"projects"=>array_reduce($this->projects, function($container, $project) {
+			$container[] = $project->toArray();
+			return $container;
+		}),
+		"users"=>array_reduce($this->users, function($container, $user) {
+			$container[] = $user->toArray();
+			return $container;
+		}),
+		"activeProjects"=>array_reduce($this->activeProjects, function($container, $project) {
+			$container[] = $project->toArray();
+			return $container;
+		}),
+		"stickers"=>$this->stickers
 		];
 	}
 
 	public function toJSON() {
-		return json_encode($this->toArray(), JSON_PRETTY_PRINT);
+		return json_encode($this->toArray());
 	}
 
 	public function getUserAPIToken($identifier) {
@@ -179,7 +211,7 @@ class KanbanBoard {
 				return $user->getAPIToken();
 			}
 		}
-		throw new InvalidArgumentException("No user identified by $identifier exists on this board");
+		throw new \InvalidArgumentException("No user identified by $identifier exists on this board");
 	}
 
 	public function save() {

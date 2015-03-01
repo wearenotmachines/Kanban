@@ -26,7 +26,7 @@ class KanbanBoardClient implements DataTransformable {
 	 * @param KanbanBoardProject $project the proecjt to add
 	 */
 	public function addProject(KanbanBoardProject $project) {
-		if (!in_array($project, $this->projects)) {
+		if (!in_array($project, $this->projects, true)) {
 			$this->projects[$project->getID()] = $project;
 			if (empty($project->getClient())) {
 				$project->setClient($this);

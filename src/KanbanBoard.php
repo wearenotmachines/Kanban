@@ -54,15 +54,9 @@ class KanbanBoard {
 				}	
 			}
 		}
+		
 		if (!empty($data['activeProjects'])) {
-			foreach ($data['activeProjects'] AS $project) {
-				$activeProject = KanbanBoardProject::fromArray($project);
-				if ($this->hasProject($activeProject->getID()) && empty($activeProject->getClient())) { //project has null client - try to reconcile rom last cache lookup
-					$refProject = $this->getProject($activeProject->getID());
-					$activeProject->setClient($refProject->getClient());
-				}
-				$this->activeProjects[] = $activeProject;
-			}
+			$this->activeProjects = $data['activeProjects'];
 		}
 
 		if (!empty($data['stickers'])) {
@@ -179,6 +173,31 @@ class KanbanBoard {
 		return $this->activeProjects;
 	}
 
+	public function makeProjectActive($project) {
+		if ($project instanceof KanbanBoardProject) {
+			$project = $project->getID();
+		} 
+		if (!$this->hasProject($project)) {
+			throw new InvalidArgumentException("This board has no project identified by $project");
+		}
+		$this->activeProjects[] = $project->getID();
+		$this->activeProjects = array_unique($this->activeProjects);
+		return $this;
+	}
+
+	public function makeProjectInactive($project) {
+		if ($project instanceof KanbanBoardProject) {
+			$project = $project->getID();
+		} 
+		if (!$this->hasProject($project)) {
+			throw new InvalidArgumentException("This board has no project identified by $project");
+		}
+		if (in_array($project, $this->activeProjects)) {
+			unset($this->activeProjects[array_search($project, $this->activeProjects)]);
+		}
+		return $this;
+	}
+
 	public function toArray() {
 		return [
 		"clients"=>array_reduce($this->clients, function($container, $client) {
@@ -193,16 +212,13 @@ class KanbanBoard {
 			$container[] = $user->toArray();
 			return $container;
 		}),
-		"activeProjects"=>array_reduce($this->activeProjects, function($container, $project) {
-			$container[] = $project->toArray();
-			return $container;
-		}),
+		"activeProjects"=>$this->activeProjects,
 		"stickers"=>$this->stickers
 		];
 	}
 
 	public function toJSON() {
-		return json_encode($this->toArray());
+		return json_encode($this->toArray(), JSON_PRETTY_PRINT);
 	}
 
 	public function getUserAPIToken($identifier) {
@@ -216,5 +232,33 @@ class KanbanBoard {
 
 	public function save() {
 		return file_put_contents($this->datasource, $this->toJSON());
+	}
+
+	public function addStickerToProject(KanbanBoardSticker $sticker, $project) {
+		if ($project instanceof KanbanBoardProject) {
+			$projectID = $project->getID();
+		} else {
+			$projectID = $project;
+			$project = $this->getProject($project);
+		}
+		if (!$this->hasProject($projectID)) {
+			throw new InvalidArgumentException("This board has no project identified by $project");
+		}
+		$project->addSticker($sticker);
+		return $this;
+	}
+
+	public function removeStickerFromProject(KanbanBoardSticker $sticker, $project) {
+		if ($project instanceof KanbanBoardProject) {
+			$projectID = $project->getID();
+		} else {
+			$projectID = $project;
+			$project = $this->getProject($project);
+		}
+		if (!$this->hasProject($projectID)) {
+			throw new InvalidArgumentException("This board has no project identified by $project");
+		}
+		$project->removeSticker($sticker);
+		return $this;
 	}
 }

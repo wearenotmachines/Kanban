@@ -8,6 +8,7 @@ class KanbanBoardProject implements DataTransformable {
 	private $id;
 	private $name;
 	private $hidden = false;
+	private $stickers = array();
 
 	public function __construct($id=null, $name=null, $hidden=false) {
 		$this->id = $id;
@@ -25,6 +26,11 @@ class KanbanBoardProject implements DataTransformable {
 			$project->setClient(new KanbanBoardClient($projectData['clientID'], (empty($projectData['clientName']) ? null : $projectData['clientName'])));
 		} else if (!empty($projectData['cid'])) {
 			$project->setClient(new KanbanBoardClient($projectData['cid']));
+		}
+		if (!empty($projectData['stickers'])) {
+			foreach ($projectData['stickers'] AS $sticker) {
+				$project->addSticker(KanbanBoardSticker::fromArray($sticker));
+			}
 		}
 		return $project;
 	}
@@ -102,17 +108,40 @@ class KanbanBoardProject implements DataTransformable {
 	}
 
 	public function toArray() {
+		$stickers = array();
+		foreach ($this->stickers AS $sticker) {
+			$stickers[] = $sticker->toArray();
+		}
 		return [
 			"id"=>$this->id,
 			"name"=>$this->name,
 			"clientID"=>$this->getClientID(),
 			"clientName"=>$this->getClientName(),
-			"hidden"=>(boolean)$this->hidden
+			"hidden"=>(boolean)$this->hidden,
+			"stickers" => $stickers
 		];
 	}
 
 	public function toJSON() {
 		return json_encode($this->toArray(), JSON_PRETTY_PRINT);
+	}
+
+	public function hasSticker(KanbanBoardSticker $sticker) {
+		return in_array($sticker, $this->stickers);
+	}
+
+	public function addSticker(KanbanBoardSticker $sticker) {
+		if (!in_array($sticker, $this->stickers)) {
+			$this->stickers[] = $sticker;
+		}	
+		return $this;
+	}
+
+	public function removeSticker(KanbanBoardSticker $sticker) {
+		if ($this->hasSticker($sticker)) {
+			unset($this->stickers[array_search($sticker, $this->stickers)]);
+		}
+		return $this;
 	}
 
 }

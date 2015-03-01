@@ -169,15 +169,25 @@ class KanbanBoard {
 		return $this->projects;
 	}
 
-	public function getActiveProjects() {
+	public function getActiveProjectIDs() {
 		return $this->activeProjects;
+	}
+
+	public function getActiveProjects() {
+		$projects = array();
+		foreach ($this->activeProjects AS $pid) {
+			$projects[] = $this->getProject($pid);
+		}
+		return $projects;
 	}
 
 	public function makeProjectActive($project) {
 		if ($project instanceof KanbanBoardProject) {
 			$project = $project->getID();
-		} 
-		if (!$this->hasProject($project)) {
+		} else {
+			$project = $this->getProject($project);
+		}
+		if (!$this->hasProject($project->getID())) {
 			throw new InvalidArgumentException("This board has no project identified by $project");
 		}
 		$this->activeProjects[] = $project->getID();
@@ -188,12 +198,14 @@ class KanbanBoard {
 	public function makeProjectInactive($project) {
 		if ($project instanceof KanbanBoardProject) {
 			$project = $project->getID();
-		} 
-		if (!$this->hasProject($project)) {
+		} else {
+			$project = $this->getProject($project);
+		}
+		if (!$this->hasProject($project->getID())) {
 			throw new InvalidArgumentException("This board has no project identified by $project");
 		}
-		if (in_array($project, $this->activeProjects)) {
-			unset($this->activeProjects[array_search($project, $this->activeProjects)]);
+		if (in_array($project->getID(), $this->activeProjects)) {
+			unset($this->activeProjects[array_search($project->getID(), $this->activeProjects)]);
 		}
 		return $this;
 	}
@@ -260,5 +272,22 @@ class KanbanBoard {
 		}
 		$project->removeSticker($sticker);
 		return $this;
+	}
+
+	public function updateProject($projectID, KanbanProject $with) {
+		if (!$this->hasProject($projectID)) {
+			throw InvalidArgumentException("This board has no project identified by $projectID");
+		}
+		$this->getProject($projectID)->updateWith($with);
+		return $this;
+	}
+
+	public function isActiveProject($project) {
+		if ($project instanceof KanbanBoardProject) {
+			$projectID = $project->getID();
+		} else {
+			$projectID = $project;
+		}
+		return in_array($projectID, $this->activeProjects);
 	}
 }

@@ -144,4 +144,13 @@ class KanbanBoardProject implements DataTransformable {
 		return $this;
 	}
 
+	public function update(KanbanProject $with) {
+		$this->id = $with->getID();
+		$this->label = $with->getLabel();
+		$this->client = $with->getClient();
+		$this->stickers = $with->getStickers();
+		$this->hidden = $with->isHidden();
+		return $this;
+	}
+
 }

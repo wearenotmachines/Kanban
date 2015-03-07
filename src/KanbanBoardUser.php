@@ -3,12 +3,14 @@
 class KanbanBoardUser implements DataTransformable {
 
 	private $id;
+	private $uid;
 	private $name;
 	private $email;
 	private $apiToken;
 
-	public function __construct($id=null, $name=null, $email=null, $apiToken=null) {
+	public function __construct($id=null, $name=null, $email=null, $apiToken=null, $uid=null) {
 		$this->id = $id;
+		$this->uid = $uid;
 		$this->name = $name;
 		$this->email = $email;
 		$this->apiToken = $apiToken;
@@ -24,7 +26,8 @@ class KanbanBoardUser implements DataTransformable {
 			$id = (isset($userData['id']) ? $userData['id'] : null),
 			$name = (isset($userData['name']) ? $userData['name'] : null),
 			$email = (isset($userData['email']) ? $userData['email'] : null),
-			$apiToken = (isset($userData['apiToken']) ? $userData['apiToken'] : null)
+			$apiToken = (isset($userData['apiToken']) ? $userData['apiToken'] : null),
+			$uid = (isset($userData['uid']) ? $userData['uid'] : null)
 		);
 	}
 
@@ -34,6 +37,10 @@ class KanbanBoardUser implements DataTransformable {
 	 */
 	public function getID() {
 		return $this->id;
+	}
+
+	public function getUID() {
+		return $this->uid;
 	}
 
 	/**
@@ -63,6 +70,7 @@ class KanbanBoardUser implements DataTransformable {
 	public function toArray() {
 		return [
 			"id"=>$this->id,
+			"uid"=>$this->uid,
 			"name"=>$this->name,
 			"email"=>$this->email,
 			"apiToken"=>$this->apiToken

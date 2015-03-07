@@ -76,7 +76,7 @@ class KanbanBoard {
 
 	public function addUser(KanbanBoardUser $user) {
 		foreach ($this->users AS $u) {
-			if ($u->getID()==$user->getID()) {
+			if ($u->getUID() && $u->getUID()==$user->getUID()) {
 				return $this;
 			}
 		}

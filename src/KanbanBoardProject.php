@@ -9,11 +9,13 @@ class KanbanBoardProject implements DataTransformable {
 	private $name;
 	private $hidden = false;
 	private $stickers = array();
+	private $users = array();
 
-	public function __construct($id=null, $name=null, $hidden=false) {
+	public function __construct($id=null, $name=null, $hidden=false, $users=array()) {
 		$this->id = $id;
 		$this->name = $name;
 		$this->hidden = $hidden;
+		$this->users = $users;
 	}
 
 	public static function fromArray(Array $projectData) {
@@ -31,6 +33,9 @@ class KanbanBoardProject implements DataTransformable {
 			foreach ($projectData['stickers'] AS $sticker) {
 				$project->addSticker(KanbanBoardSticker::fromArray($sticker));
 			}
+		}
+		if (!empty($projectData['users'])) {
+			$project->users = $projectData['users'];
 		}
 		return $project;
 	}
@@ -118,7 +123,8 @@ class KanbanBoardProject implements DataTransformable {
 			"clientID"=>$this->getClientID(),
 			"clientName"=>$this->getClientName(),
 			"hidden"=>(boolean)$this->hidden,
-			"stickers" => $stickers
+			"stickers" => $stickers,
+			"users"=>$this->users
 		];
 	}
 
@@ -144,12 +150,29 @@ class KanbanBoardProject implements DataTransformable {
 		return $this;
 	}
 
+	public function addUser($userID) {
+		$userID = (int)$userID;
+		if (!in_array($userID, $this->users)) {
+			$this->users[] = $userID;
+		}
+		return $this;
+	}
+
+	public function hasUser($userID) {
+		return in_array($userID, $this->users);
+	}
+
+	public function removeUser($userID) {
+		unset($this->users[array_search($userID, $this->users)]);
+	}
+
 	public function update(KanbanProject $with) {
 		$this->id = $with->getID();
 		$this->label = $with->getLabel();
 		$this->client = $with->getClient();
 		$this->stickers = $with->getStickers();
 		$this->hidden = $with->isHidden();
+		$this->users = $with->getUsers();
 		return $this;
 	}
 

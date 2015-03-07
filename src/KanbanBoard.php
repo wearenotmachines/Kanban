@@ -278,7 +278,7 @@ class KanbanBoard {
 		if (!$this->hasProject($projectID)) {
 			throw InvalidArgumentException("This board has no project identified by $projectID");
 		}
-		$this->getProject($projectID)->updateWith($with);
+		$this->getProject($projectID)->update($with);
 		return $this;
 	}
 
@@ -289,5 +289,12 @@ class KanbanBoard {
 			$projectID = $project;
 		}
 		return in_array($projectID, $this->activeProjects);
+	}
+
+	public function removeUserFromProjectsExcept($userID, $exceptProjectID=null) {
+		foreach ($this->projects AS $project) {
+			if ($project->getID()==$exceptProjectID) continue;
+			$project->removeUser($userID);
+		}
 	}
 }

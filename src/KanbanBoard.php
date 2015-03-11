@@ -45,7 +45,8 @@ class KanbanBoard {
 			foreach ($data['projects'] AS $project) {
 				$newProject = KanbanBoardProject::fromArray($project);
 				$this->projects[$newProject->getID()] = $newProject;
-				if (!empty($newProject->getClient())) {
+				$client = $newProject->getClient();
+				if (!empty($client)) {
 					if (isset($this->clients[$newProject->getClientID()])) {
 						$this->clients[$newProject->getClientID()]->addProject($newProject);
 					} else {
@@ -296,5 +297,9 @@ class KanbanBoard {
 			if ($project->getID()==$exceptProjectID) continue;
 			$project->removeUser($userID);
 		}
+	}
+
+	public function getStickers() {
+		return $this->stickers;
 	}
 }
